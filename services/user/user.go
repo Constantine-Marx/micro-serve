@@ -1,64 +1,57 @@
 package user
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
-	"log"
+
+	_ "github.com/go-sql-driver/mysql"
 )
 
 type User struct {
-	ID       int
-	Username string
-	Email    string
+	ID       int    `json:"ID"`
+	Username string `json:"Username"`
+	Email    string `json:"Email"`
 }
 
-type Service interface {
-	GetUserByID(id int) (*User, error)
-	CreateUser(user *User) error
+type UserService interface {
+	GetUserByID(ctx context.Context, args *User, reply *User) error
+	CreateUser(ctx context.Context, args *User, reply *User) error
 }
 
 type userServiceImpl struct {
-	users map[int]*User
-	db    *sql.DB
+	db *sql.DB
 }
 
-func NewUserService(db *sql.DB) Service {
-	return &userServiceImpl{
-		db:    db,
-		users: make(map[int]*User),
-	}
-}
-
-func (s *userServiceImpl) GetUserByID(id int) (*User, error) {
-	user, ok := s.users[id]
-	if !ok {
-		return nil, fmt.Errorf("user not found")
-	}
-
-	// 示例：从数据库中读取用户信息
-	row := s.db.QueryRow("SELECT email FROM users WHERE id = ?", id)
-	var email string
-	err := row.Scan(&email)
+func (s *userServiceImpl) GetUserByID(ctx context.Context, args *User, reply *User) error {
+	row := s.db.QueryRow("SELECT id, username, email FROM users WHERE id = ?", args.ID)
+	err := row.Scan(&reply.ID, &reply.Username, &reply.Email)
 	if err != nil {
-		log.Printf("Failed to get user email from database: %v", err)
-	} else {
-		user.Email = email
+		if err == sql.ErrNoRows {
+			return fmt.Errorf("user not found")
+		}
+		return err
 	}
-
-	return user, nil
+	return nil
 }
 
-func (s *userServiceImpl) CreateUser(user *User) error {
-	if _, ok := s.users[user.ID]; ok {
+func (s *userServiceImpl) CreateUser(ctx context.Context, args *User, reply *User) error {
+	result, err := s.db.Exec("INSERT INTO users (id, username, email) VALUES (?, ?, ?)", args.ID, args.Username, args.Email)
+	if err != nil {
+		return err
+	}
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rowsAffected == 0 {
 		return fmt.Errorf("user already exists")
 	}
-	s.users[user.ID] = user
-
-	// 示例：将用户信息写入数据库
-	_, err := s.db.Exec("INSERT INTO users (id, username, email) VALUES (?, ?, ?)", user.ID, user.Username, user.Email)
-	if err != nil {
-		log.Printf("Failed to insert user into database: %v", err)
-	}
-
 	return nil
+}
+
+func NewUserService(db *sql.DB) UserService {
+	return &userServiceImpl{
+		db: db,
+	}
 }

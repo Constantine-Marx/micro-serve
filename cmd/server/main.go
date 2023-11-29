@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"flag"
 	"log"
-	"net/http"
 	_ "net/http/pprof"
 	"os/exec"
 	"rpcx/services/storage"
@@ -21,7 +20,7 @@ import (
 var (
 	addr     = flag.String("addr", "localhost:8972", "server address")
 	etcdAddr = flag.String("etcdAddr", "localhost:2379", "etcd address")
-	basePath = flag.String("base", "/rpcx_test", "prefix path")
+	basePath = flag.String("base", "rpcx_test/", "prefix path")
 )
 
 func main() {
@@ -35,10 +34,6 @@ func main() {
 	}
 	time.Sleep(time.Second * 2)
 
-	go func() {
-		_ = http.ListenAndServe(":9981", nil)
-	}()
-
 	// 连接到数据库
 	db, err := storage.ConnectDB("root", "user", "localhost:3306", "movie_ticket_service")
 	if err != nil {
@@ -51,9 +46,12 @@ func main() {
 	s := server.NewServer()
 	addRegistryPlugin(s)
 
-	_ = s.RegisterName("UserService", user.NewUserService(db), "")
-	_ = s.RegisterName("MovieService", movie.NewMovieService(), "")
-	_ = s.RegisterName("OrderService", order.NewOrderService(), "")
+	err = s.RegisterName("UserService", user.NewUserService(db), "")
+	if err != nil {
+		panic(err)
+	}
+	_ = s.RegisterName("MovieService", movie.NewMovieService(db), "")
+	_ = s.RegisterName("OrderService", order.NewOrderService(db), "")
 
 	err = s.Serve("tcp", *addr)
 	if err != nil {

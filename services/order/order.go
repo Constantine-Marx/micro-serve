@@ -1,50 +1,71 @@
 package order
 
 import (
+	"context"
+	"database/sql"
 	"fmt"
 	"sync"
 	"time"
+
+	_ "github.com/go-sql-driver/mysql"
 )
 
 type Order struct {
-	ID        int
-	UserID    int
-	MovieID   int
-	TicketNum int
-	Date      time.Time
+	ID        int       `json:"ID"`
+	UserID    int       `json:"UserID"`
+	MovieID   int       `json:"MovieID"`
+	TicketNum int       `json:"TicketNum"`
+	Date      time.Time `json:"Date"`
 }
 
 type OrderService interface {
-	GetOrderByID(id int) (*Order, error)
-	CreateOrder(order *Order) error
+	GetOrderByID(ctx context.Context, args *Order, reply *Order) error
+	CreateOrder(ctx context.Context, args *Order, reply *struct{}) error
 }
 
 type orderServiceImpl struct {
 	orders     map[int]*Order
 	orderMutex sync.Mutex
+	db         *sql.DB
 }
 
-func NewOrderService() OrderService {
-	return &orderServiceImpl{
-		orders: make(map[int]*Order),
+func (s *orderServiceImpl) GetOrderByID(ctx context.Context, args *Order, reply *Order) error {
+	var date []byte
+	row := s.db.QueryRow("SELECT id, user_id, movie_id, ticket_num, date FROM orders WHERE id = ?", args.ID)
+	err := row.Scan(&reply.ID, &reply.UserID, &reply.MovieID, &reply.TicketNum, &date)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return fmt.Errorf("order not found")
+		}
+		return err
 	}
-}
 
-func (s *orderServiceImpl) GetOrderByID(id int) (*Order, error) {
-	order, ok := s.orders[id]
-	if !ok {
-		return nil, fmt.Errorf("order not found")
+	parsedDate, err := time.Parse("2006-01-02 15:04:05", string(date))
+	if err != nil {
+		return fmt.Errorf("failed to parse date: %v", err)
 	}
-	return order, nil
+	reply.Date = parsedDate
+
+	return nil
 }
 
-func (s *orderServiceImpl) CreateOrder(order *Order) error {
-	s.orderMutex.Lock()
-	defer s.orderMutex.Unlock()
-
-	if _, ok := s.orders[order.ID]; ok {
+func (s *orderServiceImpl) CreateOrder(ctx context.Context, order *Order, reply *struct{}) error {
+	result, err := s.db.Exec("INSERT INTO orders (id, user_id, movie_id, ticket_num, date) VALUES (?, ?, ?, ?, ?)", order.ID, order.UserID, order.MovieID, order.TicketNum, order.Date)
+	if err != nil {
+		return err
+	}
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rowsAffected == 0 {
 		return fmt.Errorf("order already exists")
 	}
-	s.orders[order.ID] = order
 	return nil
+}
+
+func NewOrderService(db *sql.DB) OrderService {
+	return &orderServiceImpl{
+		db: db,
+	}
 }

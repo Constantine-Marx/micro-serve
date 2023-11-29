@@ -16,7 +16,7 @@ import (
 
 var (
 	etcdAddr = flag.String("etcdAddr", "localhost:2379", "etcd address")
-	basePath = flag.String("base", "/rpcx_test", "prefix path")
+	basePath = flag.String("base", "rpcx_test", "prefix path")
 )
 
 func main() {
@@ -64,8 +64,8 @@ func main() {
 
 	// 示例：创建订单
 	orders := &serviceorder.Order{
-		ID:        1,
-		UserID:    1,
+		ID:        3,
+		UserID:    2,
 		MovieID:   1,
 		TicketNum: 2,
 		Date:      time.Now(),
@@ -77,7 +77,7 @@ func main() {
 
 	// 示例：获取订单
 	var getOrder serviceorder.Order
-	err = orderClient.Call(context.Background(), "GetOrderByID", 1, &getOrder)
+	err = orderClient.Call(context.Background(), "GetOrderByID", 2, &getOrder)
 	if err != nil {
 		log.Fatalf("failed to get order: %v", err)
 	}
