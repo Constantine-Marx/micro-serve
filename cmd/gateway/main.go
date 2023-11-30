@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"github.com/rs/cors"
 	"net/http"
 
 	etcdclient "github.com/rpcxio/rpcx-etcd/client"
@@ -54,6 +55,17 @@ func main() {
 			Addr: *addr,
 		},
 	}
+
+	// 添加 CORS 处理
+	corsWrapper := cors.New(cors.Options{
+		AllowedOrigins:   []string{"*"}, // 允许所有域名
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"*"},
+		AllowCredentials: true,
+		Debug:            false,
+	})
+
+	myHTTPServer.server.Handler = corsWrapper.Handler(http.DefaultServeMux)
 
 	// 创建 RPCX 网关
 	g := gateway.NewGateway("/", myHTTPServer, sd, client.Failover, client.RoundRobin, client.DefaultOption)
