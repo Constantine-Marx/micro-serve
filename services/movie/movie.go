@@ -1,3 +1,4 @@
+// Package movie services/movie/movie.go
 package movie
 
 import (
@@ -5,6 +6,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -18,6 +20,11 @@ type Movie struct {
 type MovieService interface {
 	GetMovieByID(ctx context.Context, args *Movie, reply *Movie) error
 	CreateMovie(ctx context.Context, movie *Movie, reply *struct{}) error
+	GetMoviesByPage(ctx context.Context, args *PageRequest, reply *[]Movie) error
+}
+
+type PageRequest struct {
+	Page int `json:"page"`
 }
 
 type movieServiceImpl struct {
@@ -51,7 +58,34 @@ func (s *movieServiceImpl) CreateMovie(ctx context.Context, movie *Movie, reply 
 	}
 	return nil
 }
+func (s *movieServiceImpl) GetMoviesByPage(ctx context.Context, args *PageRequest, reply *[]Movie) error {
+	offset := (args.Page - 1) * 10
+	rows, err := s.db.Query("SELECT id, title, rating FROM movies LIMIT 10 OFFSET ?", offset)
+	if err != nil {
+		log.Printf("Error fetching movies: %v", err) // 添加日志记录
+		return err
+	}
+	defer rows.Close()
 
+	var movies []Movie
+	for rows.Next() {
+		var movie Movie
+		err := rows.Scan(&movie.ID, &movie.Title, &movie.Rating)
+		if err != nil {
+			log.Printf("Error scanning movie row: %v", err) // 添加日志记录
+			return err
+		}
+		movies = append(movies, movie)
+	}
+
+	if err := rows.Err(); err != nil {
+		log.Printf("Error in movie rows: %v", err) // 添加日志记录
+		return err
+	}
+
+	*reply = movies
+	return nil
+}
 func NewMovieService(db *sql.DB) MovieService {
 	return &movieServiceImpl{
 		db: db,

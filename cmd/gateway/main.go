@@ -1,3 +1,4 @@
+// Path: cmd/gateway/main.go
 package main
 
 import (

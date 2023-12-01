@@ -1,3 +1,5 @@
+// Description: 服务端启动入口
+// ./cmd/server/main.go
 package main
 
 import (

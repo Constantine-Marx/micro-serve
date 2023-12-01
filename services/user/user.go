@@ -1,3 +1,4 @@
+// Package user services/user/user.go
 package user
 
 import (
@@ -20,6 +21,7 @@ type User struct {
 type UserService interface {
 	GetUserByID(ctx context.Context, args *User, reply *User) error
 	CreateUser(ctx context.Context, args *User, reply *User) error
+	Login(ctx context.Context, args *User, reply *User) error
 }
 
 type userServiceImpl struct {
@@ -61,6 +63,22 @@ func (s *userServiceImpl) CreateUser(ctx context.Context, args *User, reply *Use
 	}
 	args.ID = int(lastInsertID)
 
+	return nil
+}
+
+func (s *userServiceImpl) Login(ctx context.Context, args *User, reply *User) error {
+	log.Printf("Login called with args: %+v", args)
+	row := s.db.QueryRow("SELECT id, username, email FROM users WHERE username = ? AND password = ?", args.Username, args.Password)
+	err := row.Scan(&reply.ID, &reply.Username, &reply.Email)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			log.Printf("Invalid credentials: %v", err)
+			return fmt.Errorf("invalid credentials")
+		}
+		log.Printf("Login error: %v", err)
+		return err
+	}
+	log.Printf("Login success, reply: %+v", reply)
 	return nil
 }
 
