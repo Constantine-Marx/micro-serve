@@ -8,7 +8,8 @@ import (
 	"log"
 	_ "net/http/pprof"
 	"os/exec"
-	"rpcx/services/storage"
+	"rpcx/utils/storage"
+	"rpcx/utils/utils"
 	"time"
 
 	"github.com/rpcxio/rpcx-etcd/serverplugin"
@@ -34,10 +35,9 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	time.Sleep(time.Second * 2)
 
 	// 连接到数据库
-	db, err := storage.ConnectDB("root", "user", "localhost:3306", "movie_ticket_service")
+	db, err := storage.ConnectDB("root", "228809", "localhost:3306", "movie_ticket_service")
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
@@ -54,6 +54,7 @@ func main() {
 	}
 	_ = s.RegisterName("MovieService", movie.NewMovieService(db), "")
 	_ = s.RegisterName("OrderService", order.NewOrderService(db), "")
+	_ = s.RegisterName("UtilService", utils.NewExtractService(db), "")
 
 	err = s.Serve("tcp", *addr)
 	if err != nil {

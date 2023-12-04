@@ -44,10 +44,17 @@ func (s *userServiceImpl) GetUserByID(ctx context.Context, args *User, reply *Us
 	return nil
 }
 func (s *userServiceImpl) CreateUser(ctx context.Context, args *User, reply *User) error {
-	result, err := s.db.Exec("INSERT INTO users (username, email, password) VALUES (?, ?, ?)", args.Username, args.Email, args.Password)
+	stmt, err := s.db.Prepare("INSERT INTO users (username, email, password) VALUES (?, ?, ?)")
 	if err != nil {
+		log.Printf("CreateUser error: %v", err)
 		return err
 	}
+	result, err := stmt.Exec(args.Username, args.Email, args.Password)
+	if err != nil {
+		log.Printf("CreateUser error: %v", err)
+		return err
+	}
+
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
 		return err

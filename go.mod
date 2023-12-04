@@ -9,8 +9,10 @@ require (
 )
 
 require (
+	github.com/PuerkitoBio/goquery v1.8.1 // indirect
 	github.com/akutz/memconn v0.1.0 // indirect
 	github.com/alitto/pond v1.8.3 // indirect
+	github.com/andybalholm/cascadia v1.3.1 // indirect
 	github.com/apache/thrift v0.19.0 // indirect
 	github.com/cenk/backoff v2.2.1+incompatible // indirect
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect

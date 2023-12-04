@@ -4,6 +4,7 @@ package order
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -32,10 +33,10 @@ type orderServiceImpl struct {
 
 func (s *orderServiceImpl) GetOrderByID(ctx context.Context, args *Order, reply *Order) error {
 	var date []byte
-	row := s.db.QueryRow("SELECT id, user_id, movie_id, ticket_num, date FROM orders WHERE id = ?", args.ID)
+	row := s.db.QueryRow("SELECT id, UserID, MovieID, TicketNum, date FROM orders WHERE id = ?", args.ID)
 	err := row.Scan(&reply.ID, &reply.UserID, &reply.MovieID, &reply.TicketNum, &date)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return fmt.Errorf("order not found")
 		}
 		return err
@@ -51,7 +52,7 @@ func (s *orderServiceImpl) GetOrderByID(ctx context.Context, args *Order, reply 
 }
 
 func (s *orderServiceImpl) CreateOrder(ctx context.Context, order *Order, reply *struct{}) error {
-	result, err := s.db.Exec("INSERT INTO orders (id, user_id, movie_id, ticket_num, date) VALUES (?, ?, ?, ?, ?)", order.ID, order.UserID, order.MovieID, order.TicketNum, order.Date)
+	result, err := s.db.Exec("INSERT INTO orders (id, UserID, MovieID, TicketNum, date) VALUES (?, ?, ?, ?, ?)", order.ID, order.UserID, order.MovieID, order.TicketNum, order.Date)
 	if err != nil {
 		return err
 	}
