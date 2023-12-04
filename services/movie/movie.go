@@ -16,7 +16,7 @@ type Movie struct {
 	OriginalName string  `json:"original_name"`
 	ImdbVotes    int     `json:"imdb_votes"`
 	ImdbRating   float64 `json:"imdb_rating"`
-	RottenRating int     `json:"rotten_rating"`
+	RottenRating string  `json:"rotten_rating"`
 	RottenVotes  int     `json:"rotten_votes"`
 	Year         int     `json:"year"`
 	ImdbId       string  `json:"imdb_id"`
