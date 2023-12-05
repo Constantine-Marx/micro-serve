@@ -73,7 +73,11 @@ func (s *movieServiceImpl) LoadMoviesFromFile(ctx context.Context, filename stri
 		}
 		// 插入数据
 		_, err := s.db.Exec("INSERT INTO movies (original_name, imdb_votes, imdb_rating, rotten_rating, rotten_votes, year, imdb_id, alias, douban_id, type, douban_rating, douban_votes, duration, date_released, poster, name, genre, description, language, country, lang, share_image) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-			movieData.OriginalName, movieData.ImdbVotes, movieData.ImdbRating, movieData.RottenRating, movieData.RottenVotes, movieData.Year, movieData.ImdbId, movieData.Alias, movieData.DoubanId, movieData.Type, movieData.DoubanRating, movieData.DoubanVotes, movieData.Duration, movieData.DateReleased, movieData.Data[0].Poster, movieData.Data[0].Name, movieData.Data[0].Genre, movieData.Data[0].Description, movieData.Data[0].Language, movieData.Data[0].Country, movieData.Data[0].Lang, movieData.Data[0].ShareImage)
+			movieData.OriginalName, movieData.ImdbVotes, movieData.ImdbRating, movieData.RottenRating, movieData.RottenVotes,
+			movieData.Year, movieData.ImdbId, movieData.Alias, movieData.DoubanId, movieData.Type, movieData.DoubanRating,
+			movieData.DoubanVotes, movieData.Duration, movieData.DateReleased, movieData.Data[0].Poster, movieData.Data[0].Name,
+			movieData.Data[0].Genre, movieData.Data[0].Description, movieData.Data[0].Language, movieData.Data[0].Country,
+			movieData.Data[0].Lang, movieData.Data[0].ShareImage)
 		if err != nil {
 			return fmt.Errorf("error inserting movie data: %w", err)
 		}
