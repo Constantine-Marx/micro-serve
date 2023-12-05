@@ -21,15 +21,73 @@ import (
 )
 
 var (
-	addr     = flag.String("addr", "localhost:8972", "server address")
 	etcdAddr = flag.String("etcdAddr", "localhost:2379", "etcd address")
 	basePath = flag.String("base", "rpcx_test/", "prefix path")
 )
 
+func startUserService(addr string, db *sql.DB) {
+	s := server.NewServer()
+	addRegistryPlugin(s, addr)
+
+	err := s.RegisterName("UserService", user.NewUserService(db), "")
+	if err != nil {
+		panic(err)
+	}
+
+	err = s.Serve("tcp", addr)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func startMovieService(addr string, db *sql.DB) {
+	s := server.NewServer()
+	addRegistryPlugin(s, addr)
+
+	err := s.RegisterName("MovieService", movie.NewMovieService(db), "")
+	if err != nil {
+		panic(err)
+	}
+
+	err = s.Serve("tcp", addr)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func startOrderService(addr string, db *sql.DB) {
+	s := server.NewServer()
+	addRegistryPlugin(s, addr)
+
+	err := s.RegisterName("OrderService", order.NewOrderService(db), "")
+	if err != nil {
+		panic(err)
+	}
+
+	err = s.Serve("tcp", addr)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func startUtilService(addr string, db *sql.DB) {
+	s := server.NewServer()
+	addRegistryPlugin(s, addr)
+
+	err := s.RegisterName("UtilService", utils.NewExtractService(db), "")
+	if err != nil {
+		panic(err)
+	}
+
+	err = s.Serve("tcp", addr)
+	if err != nil {
+		panic(err)
+	}
+}
 func main() {
 	flag.Parse()
 
-	//启动etcd
+	// 启动 etcd
 	cmd := exec.Command("etcd")
 	err := cmd.Start()
 	if err != nil {
@@ -45,26 +103,19 @@ func main() {
 		_ = db.Close()
 	}(db)
 
-	s := server.NewServer()
-	addRegistryPlugin(s)
+	// 并行启动服务
+	go startMovieService(":8973", db)
+	go startUserService(":8972", db)
+	go startOrderService(":8974", db)
+	go startUtilService(":8975", db)
 
-	err = s.RegisterName("UserService", user.NewUserService(db), "")
-	if err != nil {
-		panic(err)
-	}
-	_ = s.RegisterName("MovieService", movie.NewMovieService(db), "")
-	_ = s.RegisterName("OrderService", order.NewOrderService(db), "")
-	_ = s.RegisterName("UtilService", utils.NewExtractService(db), "")
-
-	err = s.Serve("tcp", *addr)
-	if err != nil {
-		panic(err)
-	}
+	// 阻塞 main goroutine，以便服务继续运行
+	select {}
 }
 
-func addRegistryPlugin(s *server.Server) {
+func addRegistryPlugin(s *server.Server, addr string) {
 	r := &serverplugin.EtcdV3RegisterPlugin{
-		ServiceAddress: "tcp@" + *addr,
+		ServiceAddress: "tcp@" + addr, // 使用传入的 addr 而不是全局 *addr
 		EtcdServers:    []string{*etcdAddr},
 		BasePath:       *basePath,
 		UpdateInterval: time.Minute,

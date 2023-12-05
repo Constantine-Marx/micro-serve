@@ -16,7 +16,7 @@ type Order struct {
 	UserID     int       `json:"user_id"`
 	MovieID    int       `json:"movie_id"`
 	Schedule   int       `json:"schedule"`    // 更新场次字段类型
-	CinemaID   string    `json:"cinema_id"`   // 更新电影院ID字段类型
+	Cinema     string    `json:"cinema"`      // 更新电影院ID字段类型
 	SeatNumber int       `json:"seat_number"` // 更新座位号字段类型
 	OrderTime  time.Time `json:"order_time"`
 }
@@ -47,8 +47,8 @@ func (s *orderServiceImpl) GetOrderByID(ctx context.Context, args *PageRequest, 
 	case "movie_id":
 		queryId = args.Args.MovieID
 	}
-	row := s.db.QueryRow("SELECT id, user_id, movie_id, schedule, cinema_id, seat_number, order_time FROM orders WHERE ? = ?", args.QueryType, queryId)
-	err := row.Scan(&reply.ID, &reply.UserID, &reply.MovieID, &reply.Schedule, &reply.CinemaID, &reply.SeatNumber, &reply.OrderTime)
+	row := s.db.QueryRow("SELECT id, user_id, movie_id, schedule, cinema, seat_number, order_time FROM orders WHERE ? = ?", args.QueryType, queryId)
+	err := row.Scan(&reply.ID, &reply.UserID, &reply.MovieID, &reply.Schedule, &reply.Cinema, &reply.SeatNumber, &reply.OrderTime)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return fmt.Errorf("order not found")
@@ -61,7 +61,7 @@ func (s *orderServiceImpl) GetOrderByID(ctx context.Context, args *PageRequest, 
 
 func (s *orderServiceImpl) CreateOrder(ctx context.Context, args *Order, reply *struct{}) error {
 	args.OrderTime = time.Now() // 设置下单时间为当前时间
-	result, err := s.db.Exec("INSERT INTO orders (user_id, movie_id, schedule, cinema_id, seat_number, order_time) VALUES (?, ?, ?, ?, ?, ?)", args.UserID, args.MovieID, args.Schedule, args.CinemaID, args.SeatNumber, args.OrderTime)
+	result, err := s.db.Exec("INSERT INTO orders (user_id, movie_id, schedule, cinema, seat_number, order_time) VALUES (?, ?, ?, ?, ?, ?)", args.UserID, args.MovieID, args.Schedule, args.Cinema, args.SeatNumber, args.OrderTime)
 	if err != nil {
 		return err
 	}
