@@ -8,16 +8,17 @@ import (
 	"log"
 	_ "net/http/pprof"
 	"os/exec"
-	"rpcx/utils/storage"
-	"rpcx/utils/utils"
 	"time"
 
 	"github.com/rpcxio/rpcx-etcd/serverplugin"
 	"github.com/smallnest/rpcx/server"
 
 	"rpcx/services/movie"
+	"rpcx/services/movie_schedule"
 	"rpcx/services/order"
 	"rpcx/services/user"
+	"rpcx/utils/storage"
+	"rpcx/utils/utils"
 )
 
 var (
@@ -84,6 +85,25 @@ func startUtilService(addr string, db *sql.DB) {
 		panic(err)
 	}
 }
+
+// main.go
+func startMovieScheduleService(addr string, db *sql.DB) {
+	s := server.NewServer()
+	addRegistryPlugin(s, addr)
+
+	// 创建 MovieScheduleService 实例并注册
+	movieScheduleService := movie_schedule.NewMovieScheduleService(db)
+	err := s.RegisterName("MovieScheduleService", movieScheduleService, "")
+	if err != nil {
+		panic(err)
+	}
+
+	err = s.Serve("tcp", addr)
+	if err != nil {
+		panic(err)
+	}
+}
+
 func main() {
 	flag.Parse()
 
@@ -104,10 +124,11 @@ func main() {
 	}(db)
 
 	// 并行启动服务
-	go startMovieService(":8973", db)
 	go startUserService(":8972", db)
+	go startMovieService(":8973", db)
 	go startOrderService(":8974", db)
 	go startUtilService(":8975", db)
+	go startMovieScheduleService(":8976", db)
 
 	// 阻塞 main goroutine，以便服务继续运行
 	select {}
