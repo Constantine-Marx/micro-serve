@@ -17,10 +17,14 @@ type MovieSchedule struct {
 	ScheduleTime string `json:"schedule_time"`
 }
 
+type SeatsSchedule struct {
+	ID int `json:"id"`
+}
+
 type MovieScheduleService interface {
 	AddMovieSchedule(ctx context.Context, schedule *MovieSchedule) error
 	GetMovieSchedule(ctx context.Context, schedule *MovieSchedule, reply *[]MovieSchedule) error
-	GetMovieSeats(ctx context.Context, args *int, reply *[][]int) error
+	GetMovieSeats(ctx context.Context, args *SeatsSchedule, reply *[][]int) error
 }
 
 type movieScheduleServiceImpl struct {
@@ -106,8 +110,8 @@ func (s *movieScheduleServiceImpl) GetMovieSchedule(ctx context.Context, schedul
 	return nil
 }
 
-func (s *movieScheduleServiceImpl) GetMovieSeats(ctx context.Context, args *int, reply *[][]int) error {
-	rows, err := s.db.Query("SELECT seats FROM movie_schedules WHERE id = ?", *args)
+func (s *movieScheduleServiceImpl) GetMovieSeats(ctx context.Context, args *SeatsSchedule, reply *[][]int) error {
+	rows, err := s.db.Query("SELECT seats FROM movie_schedules WHERE id = ?", args.ID)
 	if err != nil {
 		log.Println(err)
 		return err

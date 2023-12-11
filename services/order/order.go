@@ -3,10 +3,13 @@ package order
 
 import (
 	"context"
+	"crypto/md5"
 	"database/sql"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -15,15 +18,13 @@ type Order struct {
 	ID         int       `json:"id"`
 	UserID     int       `json:"user_id"`
 	MovieID    int       `json:"movie_id"`
-	Schedule   int       `json:"schedule"`    // 更新场次字段类型
-	Cinema     string    `json:"cinema"`      // 更新电影院ID字段类型
 	SeatNumber int       `json:"seat_number"` // 更新座位号字段类型
 	OrderTime  time.Time `json:"order_time"`
 }
 
 type OrderService interface {
 	GetOrderByID(ctx context.Context, args *PageRequest, reply *Order) error
-	CreateOrder(ctx context.Context, args *Order, reply *struct{}) error
+	CreateOrder(ctx context.Context, args *Order, reply *struct{ OrderNumber string }) error
 }
 
 type orderServiceImpl struct {
@@ -47,8 +48,8 @@ func (s *orderServiceImpl) GetOrderByID(ctx context.Context, args *PageRequest, 
 	case "movie_id":
 		queryId = args.Args.MovieID
 	}
-	row := s.db.QueryRow("SELECT id, user_id, movie_id, schedule, cinema, seat_number, order_time FROM orders WHERE ? = ?", args.QueryType, queryId)
-	err := row.Scan(&reply.ID, &reply.UserID, &reply.MovieID, &reply.Schedule, &reply.Cinema, &reply.SeatNumber, &reply.OrderTime)
+	row := s.db.QueryRow("SELECT id, user_id, movie_id, seat_number, order_time FROM orders WHERE ? = ?", args.QueryType, queryId)
+	err := row.Scan(&reply.ID, &reply.UserID, &reply.MovieID, &reply.SeatNumber, &reply.OrderTime)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return fmt.Errorf("order not found")
@@ -59,9 +60,9 @@ func (s *orderServiceImpl) GetOrderByID(ctx context.Context, args *PageRequest, 
 	return nil
 }
 
-func (s *orderServiceImpl) CreateOrder(ctx context.Context, args *Order, reply *struct{}) error {
+func (s *orderServiceImpl) CreateOrder(ctx context.Context, args *Order, reply *struct{ OrderNumber string }) error {
 	args.OrderTime = time.Now() // 设置下单时间为当前时间
-	result, err := s.db.Exec("INSERT INTO orders (user_id, movie_id, schedule, cinema, seat_number, order_time) VALUES (?, ?, ?, ?, ?, ?)", args.UserID, args.MovieID, args.Schedule, args.Cinema, args.SeatNumber, args.OrderTime)
+	result, err := s.db.Exec("INSERT INTO orders (user_id, movie_id, seat_number, order_time) VALUES (?, ?, ?, ?)", args.UserID, args.MovieID, args.SeatNumber, args.OrderTime)
 	if err != nil {
 		return err
 	}
@@ -73,14 +74,16 @@ func (s *orderServiceImpl) CreateOrder(ctx context.Context, args *Order, reply *
 		return fmt.Errorf("order already exists")
 	}
 
-	// todo md5(args.order_time + args.user_id ) 生成订单号
+	// 生成订单号
+	hasher := md5.New()
+	hasher.Write([]byte(args.OrderTime.String() + strconv.Itoa(args.UserID)))
+	orderNumber := hex.EncodeToString(hasher.Sum(nil))
+	reply.OrderNumber = orderNumber // 设置返回值中的订单号
 	lastInsertID, err := result.LastInsertId()
 	if err != nil {
 		return err
 	}
 	args.ID = int(lastInsertID)
-
-	//todo 返回结构体
 
 	return nil
 }
