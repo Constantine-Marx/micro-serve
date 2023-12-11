@@ -20,7 +20,7 @@ type MovieSchedule struct {
 type MovieScheduleService interface {
 	AddMovieSchedule(ctx context.Context, schedule *MovieSchedule) error
 	GetMovieSchedule(ctx context.Context, schedule *MovieSchedule, reply *[]MovieSchedule) error
-	GetMovieSeas(ctx context.Context, id int, reply *[][]int) error
+	GetMovieSeats(ctx context.Context, args *int, reply *[][]int) error
 }
 
 type movieScheduleServiceImpl struct {
@@ -106,8 +106,8 @@ func (s *movieScheduleServiceImpl) GetMovieSchedule(ctx context.Context, schedul
 	return nil
 }
 
-func (s *movieScheduleServiceImpl) GetMovieSeas(ctx context.Context, id int, reply *[][]int) error {
-	rows, err := s.db.Query("SELECT seats FROM movie_schedules WHERE id = ?", id)
+func (s *movieScheduleServiceImpl) GetMovieSeats(ctx context.Context, args *int, reply *[][]int) error {
+	rows, err := s.db.Query("SELECT seats FROM movie_schedules WHERE id = ?", *args)
 	if err != nil {
 		log.Println(err)
 		return err
