@@ -1,6 +1,6 @@
 -- MySQL dump 10.13  Distrib 8.1.0, for Win64 (x86_64)
 --
--- Host: localhost    Database: movie_ticket_service
+-- Host: 127.0.0.1    Database: movie_ticket_service
 -- ------------------------------------------------------
 -- Server version	8.1.0
 
@@ -23,16 +23,16 @@ DROP TABLE IF EXISTS `movie_schedules`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `movie_schedules` (
-                                   `id` int NOT NULL AUTO_INCREMENT,
-                                   `movie_id` int NOT NULL,
-                                   `cinema_name` varchar(255) NOT NULL,
-                                   `city` varchar(50) NOT NULL,
-                                   `schedule_date` varchar(255) DEFAULT NULL,
-                                   `schedule_time` varchar(255) DEFAULT NULL,
-                                   `seats` text NOT NULL,
-                                   PRIMARY KEY (`id`),
-                                   KEY `movie_id` (`movie_id`),
-                                   CONSTRAINT `movie_schedules_ibfk_1` FOREIGN KEY (`movie_id`) REFERENCES `movies` (`id`)
+  `id` int NOT NULL AUTO_INCREMENT,
+  `movie_id` int NOT NULL,
+  `cinema_name` varchar(255) NOT NULL,
+  `city` varchar(50) NOT NULL,
+  `schedule_date` varchar(255) DEFAULT NULL,
+  `schedule_time` varchar(255) DEFAULT NULL,
+  `seats` text NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `movie_id` (`movie_id`),
+  CONSTRAINT `movie_schedules_ibfk_1` FOREIGN KEY (`movie_id`) REFERENCES `movies` (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -54,30 +54,30 @@ DROP TABLE IF EXISTS `movies`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `movies` (
-                          `id` int NOT NULL AUTO_INCREMENT,
-                          `original_name` varchar(255) DEFAULT NULL,
-                          `imdb_votes` int DEFAULT NULL,
-                          `imdb_rating` float DEFAULT NULL,
-                          `rotten_rating` varchar(255) DEFAULT NULL,
-                          `rotten_votes` int DEFAULT NULL,
-                          `year` int DEFAULT NULL,
-                          `imdb_id` varchar(10) DEFAULT NULL,
-                          `alias` varchar(255) DEFAULT NULL,
-                          `douban_id` int DEFAULT NULL,
-                          `type` varchar(10) DEFAULT NULL,
-                          `douban_rating` float DEFAULT NULL,
-                          `douban_votes` int DEFAULT NULL,
-                          `duration` int DEFAULT NULL,
-                          `date_released` varchar(255) DEFAULT NULL,
-                          `poster` varchar(255) DEFAULT NULL,
-                          `name` varchar(255) DEFAULT NULL,
-                          `genre` varchar(255) DEFAULT NULL,
-                          `description` text,
-                          `language` varchar(50) DEFAULT NULL,
-                          `country` varchar(50) DEFAULT NULL,
-                          `lang` varchar(10) DEFAULT NULL,
-                          `share_image` varchar(255) DEFAULT NULL,
-                          PRIMARY KEY (`id`)
+  `id` int NOT NULL AUTO_INCREMENT,
+  `original_name` varchar(255) DEFAULT NULL,
+  `imdb_votes` int DEFAULT NULL,
+  `imdb_rating` float DEFAULT NULL,
+  `rotten_rating` varchar(255) DEFAULT NULL,
+  `rotten_votes` int DEFAULT NULL,
+  `year` int DEFAULT NULL,
+  `imdb_id` varchar(10) DEFAULT NULL,
+  `alias` varchar(255) DEFAULT NULL,
+  `douban_id` int DEFAULT NULL,
+  `type` varchar(10) DEFAULT NULL,
+  `douban_rating` float DEFAULT NULL,
+  `douban_votes` int DEFAULT NULL,
+  `duration` int DEFAULT NULL,
+  `date_released` varchar(255) DEFAULT NULL,
+  `poster` varchar(255) DEFAULT NULL,
+  `name` varchar(255) DEFAULT NULL,
+  `genre` varchar(255) DEFAULT NULL,
+  `description` text,
+  `language` varchar(50) DEFAULT NULL,
+  `country` varchar(50) DEFAULT NULL,
+  `lang` varchar(10) DEFAULT NULL,
+  `share_image` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=358 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -99,15 +99,15 @@ DROP TABLE IF EXISTS `orders`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `orders` (
-                          `id` int NOT NULL AUTO_INCREMENT,
-                          `user_id` int NOT NULL,
-                          `movie_id` int NOT NULL,
-                          `schedule` int NOT NULL,
-                          `cinema` varchar(255) NOT NULL,
-                          `seat_number` int NOT NULL,
-                          `order_time` datetime NOT NULL,
-                          PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb3;
+  `id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int NOT NULL,
+  `movie_id` int NOT NULL,
+  `order_time` datetime NOT NULL,
+  `seat_row` int NOT NULL,
+  `seat_column` int NOT NULL,
+  `schedule_id` int NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -116,7 +116,6 @@ CREATE TABLE `orders` (
 
 LOCK TABLES `orders` WRITE;
 /*!40000 ALTER TABLE `orders` DISABLE KEYS */;
-INSERT INTO `orders` VALUES (1,1,3,2,'1',1,'1970-01-03 00:00:00');
 /*!40000 ALTER TABLE `orders` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -128,11 +127,11 @@ DROP TABLE IF EXISTS `users`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `users` (
-                         `ID` int NOT NULL AUTO_INCREMENT,
-                         `Username` varchar(255) NOT NULL DEFAULT '',
-                         `Email` varchar(255) NOT NULL DEFAULT '',
-                         `Password` varchar(255) NOT NULL DEFAULT '',
-                         PRIMARY KEY (`ID`)
+  `ID` int NOT NULL AUTO_INCREMENT,
+  `Username` varchar(255) NOT NULL DEFAULT '',
+  `Email` varchar(255) NOT NULL DEFAULT '',
+  `Password` varchar(255) NOT NULL DEFAULT '',
+  PRIMARY KEY (`ID`)
 ) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -155,4 +154,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2023-12-11 12:27:25
+-- Dump completed on 2023-12-12 12:30:57
